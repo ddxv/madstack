@@ -1,5 +1,4 @@
 ###########################################################################
-###########################################################################
 networks:
   mediastack:
     name: mediastack
@@ -13,14 +12,12 @@ networks:
 services:
 
 ###########################################################################
-###########################################################################
 ##
 ##  Docker Compose File: Bazarr (LinuxServer.io)
 ##  Function: Download subtitles for Radarr and Sonarr
 ##
 ##  Documentation: https://docs.linuxserver.io/images/docker-bazarr
 ##
-###########################################################################
 ###########################################################################
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -41,14 +38,12 @@ services:
       - mediastack
 
 ###########################################################################
-###########################################################################
 ##
 ##  Docker Compose File: Flaresolverr (Flaresolverr)
 ##  Function: Cloudflare Proxy Server
 ##
 ##  Documentation: https://github.com/FlareSolverr/FlareSolverr
 ##
-###########################################################################
 ###########################################################################
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -65,7 +60,6 @@ services:
       - mediastack
 
 ###########################################################################
-###########################################################################
 ##
 ##  Docker Compose File: Jellyfin (LinuxServer.io)
 ##  Function: Media Server
@@ -73,7 +67,6 @@ services:
 ##  Documentation: https://jellyfin.org/docs/general/administration/installing#docker
 ##  https://jellyfin.org/docs/general/administration/hardware-acceleration/
 ##
-###########################################################################
 ###########################################################################
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
@@ -91,37 +84,38 @@ services:
       - PGID=${PGID:?err}
       - UMASK=${UMASK:?err}
       - TZ=${TIMEZONE:?err}
-#      - JELLYFIN_PublishedServerUrl=${LOCAL_DOCKER_IP:?err}  # Enable for DLNA - Only works on HOST Network Mode
     networks:
       - mediastack
 
 ###########################################################################
-###########################################################################
 ##
-##  Docker Compose File: Jellyseerr (fallenbagel)
+##  seerr
 ##  Function: Media Request Manager
 ##
-##  Documentation: https://hub.docker.com/r/fallenbagel/jellyseerr
-##
 ###########################################################################
-###########################################################################
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
-    restart: unless-stopped
-    volumes:
-      - ${FOLDER_FOR_DATA:?err}/jellyseerr:/app/config
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TIMEZONE:?err}
+      - PORT=5055 #optional
     ports:
       - "${WEBUI_PORT_JELLYSEERR:?err}:5055"
-    environment:
-      - PUID=${PUID:?err}
-      - PGID=${PGID:?err}
-      - UMASK=${UMASK:?err}
-      - TZ=${TIMEZONE:?err}
+    volumes:
+      - ${FOLDER_FOR_DATA:?err}/jellyseerr:/app/config
     networks:
       - mediastack
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 30s
+      retries: 3
+    restart: unless-stopped
 
-###########################################################################
 ###########################################################################
 ##
 ##  Docker Compose File: Prowlarr (LinuxServer.io)
@@ -130,9 +124,8 @@ services:
 ##  Documentation: https://docs.linuxserver.io/images/docker-prowlarr
 ##
 ###########################################################################
-###########################################################################
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:develop
+    image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     restart: unless-stopped
     volumes:
@@ -149,14 +142,12 @@ services:
       - mediastack
 
 ###########################################################################
-###########################################################################
 ##
 ##  Docker Compose File: qBittorrent (LinuxServer.io)
 ##  Function: Torrent Download Client
 ##
 ##  Documentation: https://docs.linuxserver.io/images/docker-qbittorrent
 ##
-###########################################################################
 ###########################################################################
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -175,17 +166,14 @@ services:
       - WEBUI_PORT=${WEBUI_PORT_QBITTORRENT:?err}
       - DOCKER_MODS=ghcr.io/themepark-dev/theme.park:qbittorrent
       - TP_THEME=${TP_THEME:?err}
-    network_mode: "mediastack"
+    networks:
+      - mediastack
 
-###########################################################################
 ###########################################################################
 ##
 ##  Docker Compose File: Radarr (LinuxServer.io)
 ##  Function: Movie Library Manager
 ##
-##  Documentation: https://docs.linuxserver.io/images/docker-radarr
-##
-###########################################################################
 ###########################################################################
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -206,14 +194,10 @@ services:
       - mediastack
 
 ###########################################################################
-###########################################################################
 ##
 ##  Docker Compose File: Sonarr (LinuxServer.io)
 ##  Function: Series Library Manager (TV Shows)
 ##
-##  Documentation: https://docs.linuxserver.io/images/docker-sonarr
-##
-###########################################################################
 ###########################################################################
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -238,18 +222,17 @@ services:
 #---------------------------------------------------------------------#
   homarr:
     container_name: homarr
-    image: ghcr.io/ajnart/homarr:latest
+    image: ghcr.io/homarr-labs/homarr:latest
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
-      - ${FOLDER_FOR_DATA:?err}/homarr/configs:/app/data/configs
-      - ${FOLDER_FOR_DATA:?err}/homarr/icons:/app/public/icons
-      - ${FOLDER_FOR_DATA:?err}/homarr/data:/data
-      # - ./homarr/configs:/app/data/configs
-      # - ./homarr/icons:/app/public/icons
-      # - ./homarr/data:/data
+      - ${FOLDER_FOR_DATA:?err}/homarr/appdata:/appdata
     ports:
       - '7575:7575'
+    environment:
+      - SECRET_ENCRYPTION_KEY=11f0c77ecd8b4c79aa2cd6061467589c551f015cd4741b2e75dd96a9d8c0391d
     networks:
       - mediastack
+
+
 
