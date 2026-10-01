@@ -8,7 +8,7 @@ create
 create folders
 ```
 export FOLDER_FOR_MEDIA=/mediastack
-export FOLDER_FOR_DATA=/mediastack/mediastackdata
+export FOLDER_FOR_DATA=/mediastackdata
 export PUID=1000
 export PGID=1000
 
