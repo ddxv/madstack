@@ -16,8 +16,6 @@ services:
 ##  Docker Compose File: Bazarr (LinuxServer.io)
 ##  Function: Download subtitles for Radarr and Sonarr
 ##
-##  Documentation: https://docs.linuxserver.io/images/docker-bazarr
-##
 ###########################################################################
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -42,8 +40,6 @@ services:
 ##  Docker Compose File: Flaresolverr (Flaresolverr)
 ##  Function: Cloudflare Proxy Server
 ##
-##  Documentation: https://github.com/FlareSolverr/FlareSolverr
-##
 ###########################################################################
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -64,9 +60,6 @@ services:
 ##  Docker Compose File: Jellyfin (LinuxServer.io)
 ##  Function: Media Server
 ##
-##  Documentation: https://jellyfin.org/docs/general/administration/installing#docker
-##  https://jellyfin.org/docs/general/administration/hardware-acceleration/
-##
 ###########################################################################
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
@@ -75,7 +68,7 @@ services:
     volumes:
       - ${FOLDER_FOR_DATA:?err}/jellyfin:/config
       - ${FOLDER_FOR_MEDIA:?err}/media:/data/media
-      - ${FOLDER_FOR_DATA:?err}/jellyfin/config/web-config.json:/usr/share/jellyfin/web/config.json
+      #- ${FOLDER_FOR_DATA:?err}/jellyfin/config/web-config.json:/usr/share/jellyfin/web/config.json
 
     ports:
       - "${WEBUI_PORT_JELLYFIN:?err}:8096"
@@ -104,8 +97,10 @@ services:
       - PORT=5055 #optional
     ports:
       - "${WEBUI_PORT_JELLYSEERR:?err}:5055"
+    dns:
+      - 1.1.1.1
     volumes:
-      - ${FOLDER_FOR_DATA:?err}/jellyseerr:/app/config
+      - ${FOLDER_FOR_DATA:?err}/seerr:/app/config
     networks:
       - mediastack
     healthcheck:
@@ -120,8 +115,6 @@ services:
 ##
 ##  Docker Compose File: Prowlarr (LinuxServer.io)
 ##  Function: Indexer and Search Manager
-##
-##  Documentation: https://docs.linuxserver.io/images/docker-prowlarr
 ##
 ###########################################################################
   prowlarr:
@@ -145,8 +138,6 @@ services:
 ##
 ##  Docker Compose File: qBittorrent (LinuxServer.io)
 ##  Function: Torrent Download Client
-##
-##  Documentation: https://docs.linuxserver.io/images/docker-qbittorrent
 ##
 ###########################################################################
   qbittorrent:
